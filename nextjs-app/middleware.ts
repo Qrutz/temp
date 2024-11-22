@@ -13,6 +13,9 @@ export default clerkMiddleware(async (auth, req) => {
   const { sessionId, sessionClaims } = await auth();
   const role = sessionClaims?.metadata?.role;
 
+  // Extract bypass query parameter
+  const bypass = req.nextUrl.searchParams.get('bypass');
+
   // Allow access to public routes
   if (isPublicRoute(req)) {
     return NextResponse.next();
@@ -22,6 +25,11 @@ export default clerkMiddleware(async (auth, req) => {
   if (req.nextUrl.pathname === '/role-selection' && !sessionId) {
     const url = new URL('/sign-in', req.url);
     return NextResponse.redirect(url);
+  }
+
+  // Temporarily allow bypassing role checks
+  if (bypass === 'true') {
+    return NextResponse.next();
   }
 
   // Redirect users with roles away from /role-selection

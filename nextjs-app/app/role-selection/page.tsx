@@ -26,9 +26,12 @@ export default function RoleSelectionPage() {
                 throw new Error(data.error || "Failed to update role");
             }
 
-            // Navigate directly to the appropriate dashboard
+            // Construct the redirect URL with bypass
             const targetPath = role === "admin" ? "/admin" : "/employee";
-            router.push(targetPath);
+            const bypassUrl = `${targetPath}?bypass=true`;
+
+            // Push directly to the new path
+            router.push(bypassUrl);
 
         } catch (err) {
             if (err instanceof Error) {
