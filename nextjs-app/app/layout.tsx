@@ -15,19 +15,22 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+
+
+
   return (
     <ClerkProvider>
       <html lang="en">
         <body>
-          <header>
-            <SignedOut>
+          <header className="bg-slate-800 flex justify-end">
+            <SignedOut >
               <SignInButton />
             </SignedOut>
             <SignedIn>
               <UserButton />
             </SignedIn>
           </header>
-          <main>{children}</main>
+          <main className="min-h-screen bg-gray-800">{children}</main>
         </body>
       </html>
     </ClerkProvider>
