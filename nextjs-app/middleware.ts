@@ -4,9 +4,56 @@ import { NextResponse } from 'next/server';
 const isAdminRoute = createRouteMatcher(['/admin(.*)']);
 const isEmployeeRoute = createRouteMatcher(['/employee(.*)']);
 
+const isPublicRoute = createRouteMatcher([
+  '/sign-in(.*)',
+  '/sign-up(.*)',
+  '/role-selection(.*)',
+  '/api/update-role(.*)',
+]);
+
 export default clerkMiddleware(async (auth, req) => {
-  const sessionClaims = (await auth())?.sessionClaims;
+  const { sessionId, sessionClaims } = await auth();
   const role = sessionClaims?.metadata?.role;
+
+  const currentPath = req.nextUrl.pathname;
+
+  // Allow access to public routes
+  if (isPublicRoute(req)) {
+    // Redirect users with a role away from the role-selection page
+    if (currentPath === '/role-selection' && role) {
+      const redirectUrl = new URL(
+        role === 'admin' ? '/admin' : '/employee',
+        req.url
+      );
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    return NextResponse.next();
+  }
+
+  // If the user is not logged in, redirect to sign-in
+  if (!sessionId) {
+    const url = new URL('/sign-in', req.url);
+    return NextResponse.redirect(url);
+  }
+
+  // If the user is logged in but has no role, redirect to the role-selection page
+  if (!role) {
+    const url = new URL('/role-selection', req.url);
+    if (currentPath !== '/role-selection') {
+      return NextResponse.redirect(url);
+    }
+    return NextResponse.next(); // Allow access to role-selection
+  }
+
+  // Redirect users with roles accessing the root path to their respective dashboards
+  if (currentPath === '/') {
+    const redirectUrl = new URL(
+      role === 'admin' ? '/admin' : '/employee',
+      req.url
+    );
+    return NextResponse.redirect(redirectUrl);
+  }
 
   // Protect admin routes
   if (isAdminRoute(req) && role !== 'admin') {
@@ -20,7 +67,7 @@ export default clerkMiddleware(async (auth, req) => {
     return NextResponse.redirect(url);
   }
 
-  // Allow request to proceed
+  // Allow all other requests to proceed
   return NextResponse.next();
 });
 
