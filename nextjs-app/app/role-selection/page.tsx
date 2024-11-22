@@ -29,8 +29,13 @@ export default function RoleSelectionPage() {
             // Navigate directly to the appropriate dashboard
             const targetPath = role === "admin" ? "/admin" : "/employee";
             router.push(targetPath);
-        } catch (err: any) {
-            setError(err.message || "Something went wrong");
+
+        } catch (err) {
+            if (err instanceof Error) {
+                setError(err.message || "Something went wrong");
+            } else {
+                setError("Something went wrong");
+            }
         } finally {
             setLoading(false);
         }
